@@ -15,7 +15,7 @@ class APIClient:
     def post(self, data):
         response = requests.post(self.base_url, data=data, headers=APIConfig.HEADERS)
         if response.status_code == 200:
-            return GameParser.parse(response.text)
+            return response.text
         else:
             raise Exception(f"Failed to fetch data: {response.status_code} - {response.reason}")
 
@@ -80,6 +80,52 @@ class GameParser:
                 print(f"Warning: An error occurred while processing a game: {e}")
 
         return games
+class GameEvent:
+    def __init__(self, event_time, team, event_type, assist=None, scorer=None, home_score=None, away_score=None):
+        self.event_time = event_time
+        self.team = team
+        self.event_type = event_type
+        self.assist = assist
+        self.scorer = scorer
+        self.home_score = home_score
+        self.away_score = away_score
+
+    def __str__(self):
+        details = f"{self.event_time}s {self.team.upper()} {self.event_type}"
+        if self.event_type == "S":
+            details += f" (Assist: {self.assist}, Scorer: {self.scorer}, Scores: {self.home_score}-{self.away_score})"
+        return details
+
+class GameEventParser:
+    @staticmethod
+    def parse_event_data(response_text):
+        try:
+            event_data = json.loads(response_text)
+        except json.JSONDecodeError:
+            raise ValueError("Failed to decode JSON from response text.")
+
+        events = []
+        for event in event_data.get('e', []):  # Assuming 'e' key holds the event list
+            events.append(GameEvent(
+                event_time=event['t'],
+                team=event['e'],
+                event_type=event['y'],
+                assist=event.get('a'),
+                scorer=event.get('s'),
+                home_score=event.get('hs'),
+                away_score=event.get('as')
+            ))
+
+        game_time = event_data['ts']['time'] if 'ts' in event_data else None
+        game_status = event_data.get('o', 'In Progress' if event_data['ts']['stop'] == False else 'Stopped')
+        current_score = {'home_score': event_data['h'], 'away_score': event_data['a']}
+
+        return {
+            'game_time': game_time,
+            'game_status': game_status,
+            'current_score': current_score,
+            'events': events
+        }
 
 class Command:
     def __init__(self, client):
@@ -92,13 +138,14 @@ class Command:
 class CheckGameSchedule(Command):
     def execute(self, data):
         games = self.client.post(data)
+        games = GameParser.parse(games)
         return "\n".join(str(game) for game in games)
 
-
-class CheckGameState(Command):
+class CheckGameEvents(Command):
     def execute(self, data):
-        games = self.client.post(data)
-        return "\n".join(str(game) for game in games)
+        game_details = self.client.post(data)
+        event_details = GameEventParser.parse_event_data(game_details)
+        return "\n".join(str(event) for event in event_details['events'])
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
@@ -107,7 +154,7 @@ def parse_arguments():
     parser.add_argument("--date", help="Date for checking the schedule (format: YYYY-MM-DD)")
     parser.add_argument("--players", action="store_true", help="Include players info (boolean: true|false)")
     parser.add_argument("--teams", action="store_true", help="Include teams info (boolean: true|false)")
-    parser.add_argument("--update", action="store_true", help="Include game updates (boolean: true|false)")
+    # parser.add_argument("--update", action="store_true", help="Include game updates (boolean: true|false)")
 
     return parser.parse_args()
 
@@ -120,17 +167,15 @@ def main():
     data = {}
     if args.game:
         data['game'] = args.game
+        data['update'] = 'true'
+        command = CheckGameEvents(client)
     if args.date:
         data['schedule'] = args.date
         data['date'] = args.date
-    if args.players or args.teams or args.update:
-        data['info'] = 'detailed'
+        command = CheckGameSchedule(client)
+    # if args.players or args.teams or args.update:
+    #     data['info'] = 'detailed'
 
-    command_map = {
-        args.date: CheckGameSchedule(client),
-        args.game: CheckGameState(client)
-    }
-    command = command_map.get(True) or command_map.get(args.game)
     result = command.execute(data)
     print(result)
 
