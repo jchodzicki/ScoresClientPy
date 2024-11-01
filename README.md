@@ -50,7 +50,7 @@ Content-Type: application/x-www-form-urlencoded; charset=UTF-8
 ```
 ## Endpoints
 
-1. Get List of Games Scheduled for a Selected Date
+# 1. Get List of Games Scheduled for a Selected Date
 
 ```html
 POST /watchlive.php
@@ -79,7 +79,6 @@ Sample Response
   }
 ]
 ```
-# Detailed explanation
 
 ```html
 
@@ -98,7 +97,7 @@ dv - division (always "mixed")
 
 ```
 
-2. Get Current State of a Specific Game
+# 2. Get Current State of a Specific Game
 
 ```html
 POST /watchlive.php
@@ -128,7 +127,7 @@ stop - true if game time is not running (it should be only true before and after
 h,a - current home/away score
 ```
 
-3. Get Updates for a Specific Game
+# 3. Get Updates for a Specific Game
 
 ```html
 POST /watchlive.php
@@ -181,7 +180,7 @@ TO - timeout
 E - game end
 ```
 
-4. Get Players and Teams Information for a Game
+# 4. Get Players and Teams Information for a Game
 
 ```html
 POST /watchlive.php
