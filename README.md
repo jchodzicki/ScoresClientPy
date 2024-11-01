@@ -13,15 +13,17 @@ pip install requests
 The CLI is going to have the following interface.
 
 ```shell
-usage: python scores_reader.py [-h] [--game]
+usage:  scores_reader.py [-h] --url {test,rondo} [--game GAME] [--date DATE] [--players] [--teams] [--update]
 
-source
+arguments:
 
-Pure Python command-line Scores reader.
-
-optional arguments:
--h, --help     show this help message and exit
---game         Print game results as JSON in stdout
+-h, --help          show this help message and exit
+  --url {test,rondo}  URL to use (test or rondo)
+  --game GAME         Game ID to query
+  --date DATE         Date for checking the schedule (format: YYYY-MM-DD)
+  --players           Include players info
+  --teams             Include teams info
+  --update            Include game updates
 ```
 
 ### Contact
@@ -56,11 +58,10 @@ POST /watchlive.php
 Parameters
 schedule: (empty value)
 date: specific date in YYYY-MM-DD format (e.g., "2024-10-28")
-Sample Response
-json
 ```
 
-```html
+Sample Response
+```json
 [
 {
 "i": 1026,
@@ -75,8 +76,7 @@ json
 "a": null,
 "e": false,
 "dv": "mixed"
-},
-...
+}
 ]
 ```
 
@@ -87,12 +87,10 @@ POST /watchlive.php
 
 Parameters
 game: game ID (e.g., 1042)
-Sample Response
-json
-
 ```
 
-```html
+Sample Response
+```json
 {
 "ts": {
 "time": "1591",
@@ -112,11 +110,10 @@ POST /watchlive.php
 Parameters
 game: game ID (e.g., 1042)
 update: true
-Sample Response
-json
 ```
 
-```html
+Sample Response
+```json
 {
 "ts": {"time":"1591", "ds":"17301220648", "stop":true},
 "h": 1,
@@ -124,8 +121,7 @@ json
 "o": "h",
 "e": [
 {"t": 0, "e": "h", "y": "O"},
-{"t": 47, "e": "h", "y": "T"},
-...
+{"t": 47, "e": "h", "y": "T"}
 ]
 }
 ```
@@ -139,22 +135,20 @@ Parameters
 game: game ID (e.g., 1042)
 players: true
 teams: true
-Sample Response
-json
 ```
 
-```html
+Sample Response
+```json
 {
 "ts":{"time":"1591", "ds":"17301220648", "stop":true},
 "h":1,
 "a":1,
 "p": {
-"h": {"30":"Kajetan Mazurek", "13":"Ernest Kubiak", ...},
-"a": {"54":"Alek B\u0142aszczyk", "94":"Jaros\u0142aw Michalak", ...}
+"h": {"30":"Kajetan Mazurek", "13":"Ernest Kubiak"},
+"a": {"54":"Alek B\u0142aszczyk", "94":"Jaros\u0142aw Michalak"}
 },
 "hn": "Guziec",
-"an": "Cziru",
-...
+"an": "Cziru"
 }
 ```
 
