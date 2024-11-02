@@ -193,7 +193,7 @@ class CheckGameEvents(Command):
         self.write_team_roster('output/away_roster.txt', away_players)
 
         # Handle scoring events
-        scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 's']
+        scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 'S']
         if scoring_events:
             latest_event = max(scoring_events, key=lambda e: e['event_time'])
             self.write_to_file('output/scorer.txt', latest_event['scorer'])
@@ -247,7 +247,7 @@ def main():
     #     data['info'] = 'detailed'
 
     result = command.execute(data)
-    # print(result)
+    print(result)
 
 if __name__ == '__main__':
     main()
