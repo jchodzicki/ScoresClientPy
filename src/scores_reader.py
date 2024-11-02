@@ -2,6 +2,7 @@ import argparse
 import requests
 import os
 import json
+from abc import ABC, abstractmethod
 
 class APIConfig:
     URL_TEST = "https://scores.frisbee.pl/test3/ext/watchlive.php/"
@@ -166,12 +167,14 @@ class GameEventParser:
         return players.get(str(shirt_number))
 
 
-class Command:
+class Command(ABC):
     def __init__(self, client):
         self.client = client
 
+    @abstractmethod
     def execute(self, data):
-        raise NotImplementedError("Each command must implement the execute method.")
+        """Each command must implement the execute method."""
+        pass
 
 
 class CheckGameSchedule(Command):
@@ -184,6 +187,9 @@ class CheckGameEvents(Command):
     def execute(self, data):
         game_details = self.client.post(data)
         event_details = GameEventParser.parse_event_data(game_details)
+        return self.process_event_data(event_details)
+
+    def process_event_data(self, event_details):
 
         # Handling team rosters
         home_players = event_details.get('players', {}).get('home', {})
@@ -252,16 +258,18 @@ def parse_arguments():
     parser.add_argument("--url", choices=['test', 'rondo'], required=True, help="URL to use (test or rondo)")
     parser.add_argument("--game", type=int, help="Game ID to query")
     parser.add_argument("--date", help="Date for checking the schedule (format: YYYY-MM-DD)")
+    parser.add_argument("--start", action='store_true', help="Flag to start timer and processing game events")
 
     return parser.parse_args()
 
 def main():
+    command = None
+    data = {}
     args = parse_arguments()
-
     base_url = APIConfig.URL_TEST if args.url == 'test' else APIConfig.URL_RONDO
     client = APIClient(base_url)
 
-    data = {}
+
     if args.game:
         data['game'] = args.game
         data['update'] = 'true'
@@ -272,8 +280,8 @@ def main():
         data['schedule'] = args.date
         data['date'] = args.date
         command = CheckGameSchedule(client)
-    # if args.players or args.teams or args.update:
-    #     data['info'] = 'detailed'
+    if args.start and args.game:
+        print("Game started")
 
     result = command.execute(data)
     print(result)
