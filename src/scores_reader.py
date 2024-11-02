@@ -1,6 +1,7 @@
 import argparse
 import requests
 import json
+import os
 
 class APIConfig:
     URL_TEST = "https://scores.frisbee.pl/test3/ext/watchlive.php/"
@@ -176,16 +177,30 @@ class CheckGameEvents(Command):
     def execute(self, data):
         game_details = self.client.post(data)
         event_details = GameEventParser.parse_event_data(game_details)
+
+        # Filter only 's' event type and extract the latest based on event_time
+        scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 'S']
+        if scoring_events:
+            latest_event = max(scoring_events, key=lambda e: e['event_time'])  # Pick the event with the latest event_time
+            self.write_to_file('output/scorer.txt', latest_event['scorer'])
+            self.write_to_file('output/assist.txt', latest_event['assist'])
+
         return json.dumps(event_details, indent=4)
+
+    def write_to_file(self, filepath, data):
+        directory = os.path.dirname(filepath)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        if data:
+            with open(filepath, 'w', encoding='utf-8') as file:
+                file.write(data + '\n')
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
     parser.add_argument("--url", choices=['test', 'rondo'], required=True, help="URL to use (test or rondo)")
     parser.add_argument("--game", type=int, help="Game ID to query")
     parser.add_argument("--date", help="Date for checking the schedule (format: YYYY-MM-DD)")
-    # parser.add_argument("--players", action="store_true", help="Include players info (boolean: true|false)")
-    # parser.add_argument("--teams", action="store_true", help="Include teams info (boolean: true|false)")
-    # parser.add_argument("--update", action="store_true", help="Include game updates (boolean: true|false)")
 
     return parser.parse_args()
 
