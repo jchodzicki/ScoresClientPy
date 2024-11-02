@@ -6,9 +6,33 @@ import json
 from abc import ABC, abstractmethod
 
 class APIConfig:
-    URL_TEST = "https://scores.frisbee.pl/test3/ext/watchlive.php/"
-    URL_RONDO = "https://ultiscores.com/rondo/ext/watchlive.php/"
+    # URLs for the different services or environments
+    URLs = {
+        'test': "https://scores.frisbee.pl/test3/ext/watchlive.php/",
+        'rondo': "https://ultiscores.com/rondo/ext/watchlive.php/"
+    }
+
+    # HTTP headers to be used for POST requests
     HEADERS = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+
+    @staticmethod
+    def get_base_url(key):
+        """
+        Returns the base URL corresponding to the given configuration key.
+
+        Args:
+        key (str): Configuration key which can be 'test' or 'rondo'.
+
+        Returns:
+        str: Base URL string.
+
+        Raises:
+        ValueError: If the key is not found in the URLs dictionary.
+        """
+        if key in APIConfig.URLs:
+            return APIConfig.URLs[key]
+        else:
+            raise ValueError("Invalid URL key provided. Available keys are: {}".format(', '.join(APIConfig.URLs.keys())))
 
 
 class APIClient:
@@ -280,24 +304,42 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def main():
-    command = None
-    data = {}
-    args = parse_arguments()
-    base_url = APIConfig.URL_TEST if args.url == 'test' else APIConfig.URL_RONDO
+# Factories for Commands
+class CommandFactory:
+    @staticmethod
+    def get_command(client, data, cmd_type):
+        commands = {
+            'game_events': CheckGameEvents,
+            'game_schedule': CheckGameSchedule
+        }
+        cmd_class = commands.get(cmd_type)
+        if cmd_class:
+            return cmd_class(client)
+        raise ValueError("Invalid command type provided")
+
+# Main function split improvement
+def setup_game_environment(args):
+    base_url = APIConfig.get_base_url(args.url)
     client = APIClient(base_url)
+    game_details = {
+        'game': args.game,
+        'update': 'true',
+        'players': 'true',
+        'teams': 'true'
+    }
+    schedule_details = {
+        'schedule': args.date,
+        'date': args.date
+    }
+    command_type = 'game_events' if args.game else 'game_schedule'
+    data = game_details if args.game else schedule_details
+    return client, data, command_type
 
+def main():
+    args = parse_arguments()
+    client, data, cmd_type = setup_game_environment(args)
+    command = CommandFactory.get_command(client, data, cmd_type)
 
-    if args.game:
-        data['game'] = args.game
-        data['update'] = 'true'
-        data['players'] = 'true'
-        data['teams'] = 'true'
-        command = CheckGameEvents(client)
-    if args.date:
-        data['schedule'] = args.date
-        data['date'] = args.date
-        command = CheckGameSchedule(client)
     if args.start and args.game:
         print("Game started")
         countdown(25, "output/clock.txt", command, data)
