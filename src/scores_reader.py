@@ -192,6 +192,13 @@ class CheckGameEvents(Command):
         self.write_team_roster('output/home_roster.txt', home_players)
         self.write_team_roster('output/away_roster.txt', away_players)
 
+        # Handling team names
+        abbreviations = event_details.get("team_abbreviations", {})
+        home_abbr = abbreviations.get("home_abbr", "")
+        away_abbr = abbreviations.get("away_abbr", "")
+        self.write_to_file('output/home_name.txt', home_abbr)
+        self.write_to_file('output/away_name.txt', away_abbr)
+
         # Handle scoring events
         scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 'S']
         if scoring_events:
@@ -238,6 +245,7 @@ def main():
         data['game'] = args.game
         data['update'] = 'true'
         data['players'] = 'true'
+        data['teams'] = 'true'
         command = CheckGameEvents(client)
     if args.date:
         data['schedule'] = args.date
