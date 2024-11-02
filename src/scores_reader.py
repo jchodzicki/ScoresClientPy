@@ -113,6 +113,13 @@ class GameEventParser:
             'away_score': event_data['a']
         }
 
+        # Handling the presence of player details
+        if 'p' in event_data:
+            game_details['players'] = {
+                'home': {id: name for id, name in event_data['p']['h'].items()},
+                'away': {id: name for id, name in event_data['p']['a'].items()}
+            }
+
         # Handling the presence of game events
         if 'e' in event_data:
             game_details['events'] = [
@@ -120,20 +127,13 @@ class GameEventParser:
                     'event_time': event['t'],
                     'team': event['e'],
                     'event_type': event['y'],
-                    'assist': event.get('a'),
-                    'scorer': event.get('s'),
+                    'assist': GameEventParser.get_player_name(game_details, event['e'], event.get('a')),
+                    'scorer': GameEventParser.get_player_name(game_details, event['e'], event.get('s')),
                     'home_score_after': event.get('hs'),
                     'away_score_after': event.get('as')
                 }
-                for event in event_data['e']
+                for event in event_data.get('e', [])
             ]
-
-        # Handling the presence of player details
-        if 'p' in event_data:
-            game_details['players'] = {
-                'home': {id: name for id, name in event_data['p']['h'].items()},
-                'away': {id: name for id, name in event_data['p']['a'].items()}
-            }
 
         # Team names and abbreviations
         if 'hn' in event_data and 'an' in event_data:
@@ -148,6 +148,15 @@ class GameEventParser:
             }
 
         return game_details
+
+    @staticmethod
+    def get_player_name(game_details, team, shirt_number):
+        if shirt_number is None:
+            return None
+        team_key = 'home' if team == 'h' else 'away'
+        players = game_details.get('players', {}).get(team_key, {})
+        return players.get(str(shirt_number))
+
 
 class Command:
     def __init__(self, client):
