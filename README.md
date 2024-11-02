@@ -13,7 +13,7 @@ pip install requests
 The CLI is going to have the following interface.
 
 ```shell
-usage:  scores_reader.py [-h] --url {test,rondo} [--game GAME] [--date DATE] [--players] [--teams] [--update]
+usage:  scores_reader.py [-h] --url {test,rondo} [--game GAME] [--date DATE] [--start]
 
 arguments:
 
