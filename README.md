@@ -21,9 +21,7 @@ arguments:
   --url {test,rondo}  URL to use (test or rondo)
   --game GAME         Game ID to query
   --date DATE         Date for checking the schedule (format: YYYY-MM-DD)
-  --players           Include players info
-  --teams             Include teams info
-  --update            Include game updates
+  --start             Start processing game events every 30 seconds
 ```
 
 ### Contact

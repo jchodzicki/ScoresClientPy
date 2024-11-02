@@ -1,4 +1,5 @@
 import argparse
+import time
 import requests
 import os
 import json
@@ -141,7 +142,7 @@ class GameEventParser:
                     'home_score_after': event.get('hs'),
                     'away_score_after': event.get('as')
                 }
-                for event in event_data.get('e', [])
+                for event in event_data.get('e', []) if event['y'] == 'S'
             ]
 
         # Team names and abbreviations
@@ -253,6 +254,23 @@ class CheckGameEvents(Command):
         if not os.path.exists(directory):
             os.makedirs(directory)
 
+def countdown(minutes, file_path, command, data):
+    total_seconds = minutes * 60
+    for remaining_seconds in range(total_seconds, -1, -1):
+        mins, secs = divmod(remaining_seconds, 60)
+        time_str = f"{mins:02}:{secs:02}"
+        print(time_str)
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(time_str)
+            file.flush()
+
+            # Trigger event checking every 30 seconds
+        if remaining_seconds % 30 == 0:
+            result = command.execute(data)
+            print(result)
+
+        time.sleep(1)
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
     parser.add_argument("--url", choices=['test', 'rondo'], required=True, help="URL to use (test or rondo)")
@@ -282,6 +300,8 @@ def main():
         command = CheckGameSchedule(client)
     if args.start and args.game:
         print("Game started")
+        countdown(25, "output/clock.txt", command, data)
+        print("Game stopped")
 
     result = command.execute(data)
     print(result)
