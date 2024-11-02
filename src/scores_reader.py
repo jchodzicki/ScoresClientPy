@@ -1,7 +1,7 @@
 import argparse
 import requests
-import json
 import os
+import json
 
 class APIConfig:
     URL_TEST = "https://scores.frisbee.pl/test3/ext/watchlive.php/"
@@ -111,16 +111,23 @@ class GameEventParser:
             'game_stopwatch_timestamp': event_data['ts']['ds'] if 'ts' in event_data else None,
             'game_stopped': event_data['ts']['stop'] if 'ts' in event_data else None,
             'home_score': event_data['h'],
-            'away_score': event_data['a']
+            'away_score': event_data['a'],
+            'players': {}
         }
 
-        # Handling the presence of player details
-        if 'p' in event_data:
-            game_details['players'] = {
-                'home': {id: name for id, name in event_data['p']['h'].items()},
-                'away': {id: name for id, name in event_data['p']['a'].items()}
-            }
+        # Validate and handle player details
+        if 'p' in event_data and event_data['p']:
+            home_players = event_data['p'].get('h', {})
+            away_players = event_data['p'].get('a', {})
 
+            if home_players:
+                game_details['players']['home'] = {
+                    player_id: player_name for player_id, player_name in home_players.items()
+                }
+            if away_players:
+                game_details['players']['away'] = {
+                    player_id: player_name for player_id, player_name in away_players.items()
+                }
         # Handling the presence of game events
         if 'e' in event_data:
             game_details['events'] = [
@@ -178,23 +185,39 @@ class CheckGameEvents(Command):
         game_details = self.client.post(data)
         event_details = GameEventParser.parse_event_data(game_details)
 
-        # Filter only 's' event type and extract the latest based on event_time
-        scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 'S']
+        # Handling team rosters
+        home_players = event_details.get('players', {}).get('home', {})
+        away_players = event_details.get('players', {}).get('away', {})
+
+        self.write_team_roster('output/home_roster.txt', home_players)
+        self.write_team_roster('output/away_roster.txt', away_players)
+
+        # Handle scoring events
+        scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 's']
         if scoring_events:
-            latest_event = max(scoring_events, key=lambda e: e['event_time'])  # Pick the event with the latest event_time
+            latest_event = max(scoring_events, key=lambda e: e['event_time'])
             self.write_to_file('output/scorer.txt', latest_event['scorer'])
             self.write_to_file('output/assist.txt', latest_event['assist'])
 
         return json.dumps(event_details, indent=4)
 
     def write_to_file(self, filepath, data):
+        if data:
+            self.ensure_directory(filepath)
+            with open(filepath, 'w', encoding='utf-8') as file:
+                file.write(data + '\n')
+
+    def write_team_roster(self, filepath, players):
+        self.ensure_directory(filepath)
+        with open(filepath, 'w', encoding='utf-8') as file:
+            for player_id, player_name in players.items():
+                file.write(f"{player_id}: {player_name}\n")
+
+    @staticmethod
+    def ensure_directory(filepath):
         directory = os.path.dirname(filepath)
         if not os.path.exists(directory):
             os.makedirs(directory)
-
-        if data:
-            with open(filepath, 'w', encoding='utf-8') as file:
-                file.write(data + '\n')
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
@@ -224,7 +247,7 @@ def main():
     #     data['info'] = 'detailed'
 
     result = command.execute(data)
-    print(result)
+    # print(result)
 
 if __name__ == '__main__':
     main()
