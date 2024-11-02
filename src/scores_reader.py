@@ -202,10 +202,17 @@ class CheckGameEvents(Command):
         # Handle scoring events
         scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 'S']
         latest_home_score, latest_away_score = "0", "0"
+        latest_scorer, latest_assist = " ", " "
         if scoring_events:
             latest_event = max(scoring_events, key=lambda e: e['event_time'])
-            self.write_to_file('output/scorer.txt', latest_event['scorer'])
-            self.write_to_file('output/assist.txt', latest_event['assist'])
+            # Ensuring to get the latest non-empty score & assist updates.
+            scorer = latest_event['scorer']
+            assist = latest_event['assist']
+            if scorer:
+                latest_scorer = scorer
+
+            if assist:
+                latest_assist = assist
 
             home_score = latest_event['home_score_after']
             away_score = latest_event['away_score_after']
@@ -217,6 +224,8 @@ class CheckGameEvents(Command):
 
         self.write_to_file('output/home_score.txt', latest_home_score)
         self.write_to_file('output/away_score.txt', latest_away_score)
+        self.write_to_file('output/scorer.txt', latest_scorer)
+        self.write_to_file('output/assist.txt', latest_assist)
 
         return json.dumps(event_details, indent=4)
 
