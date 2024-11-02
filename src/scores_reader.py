@@ -104,28 +104,50 @@ class GameEventParser:
         except json.JSONDecodeError:
             raise ValueError("Failed to decode JSON from response text.")
 
-        events = []
-        for event in event_data.get('e', []):  # Assuming 'e' key holds the event list
-            events.append(GameEvent(
-                event_time=event['t'],
-                team=event['e'],
-                event_type=event['y'],
-                assist=event.get('a'),
-                scorer=event.get('s'),
-                home_score=event.get('hs'),
-                away_score=event.get('as')
-            ))
-
-        game_time = event_data['ts']['time'] if 'ts' in event_data else None
-        game_status = event_data.get('o', 'In Progress' if event_data['ts']['stop'] == False else 'Stopped')
-        current_score = {'home_score': event_data['h'], 'away_score': event_data['a']}
-
-        return {
-            'game_time': game_time,
-            'game_status': game_status,
-            'current_score': current_score,
-            'events': events
+        # Basic game data
+        game_details = {
+            'game_time': event_data['ts']['time'] if 'ts' in event_data else None,
+            'game_stopwatch_timestamp': event_data['ts']['ds'] if 'ts' in event_data else None,
+            'game_stopped': event_data['ts']['stop'] if 'ts' in event_data else None,
+            'home_score': event_data['h'],
+            'away_score': event_data['a']
         }
+
+        # Handling the presence of game events
+        if 'e' in event_data:
+            game_details['events'] = [
+                {
+                    'event_time': event['t'],
+                    'team': event['e'],
+                    'event_type': event['y'],
+                    'assist': event.get('a'),
+                    'scorer': event.get('s'),
+                    'home_score_after': event.get('hs'),
+                    'away_score_after': event.get('as')
+                }
+                for event in event_data['e']
+            ]
+
+        # Handling the presence of player details
+        if 'p' in event_data:
+            game_details['players'] = {
+                'home': {id: name for id, name in event_data['p']['h'].items()},
+                'away': {id: name for id, name in event_data['p']['a'].items()}
+            }
+
+        # Team names and abbreviations
+        if 'hn' in event_data and 'an' in event_data:
+            game_details['teams'] = {
+                'home_name': event_data['hn'],
+                'away_name': event_data['an']
+            }
+        if 'ha' in event_data and 'aa' in event_data:
+            game_details['team_abbreviations'] = {
+                'home_abbr': event_data['ha'],
+                'away_abbr': event_data['aa']
+            }
+
+        return game_details
 
 class Command:
     def __init__(self, client):
@@ -145,15 +167,15 @@ class CheckGameEvents(Command):
     def execute(self, data):
         game_details = self.client.post(data)
         event_details = GameEventParser.parse_event_data(game_details)
-        return "\n".join(str(event) for event in event_details['events'])
+        return json.dumps(event_details, indent=4)
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
     parser.add_argument("--url", choices=['test', 'rondo'], required=True, help="URL to use (test or rondo)")
     parser.add_argument("--game", type=int, help="Game ID to query")
     parser.add_argument("--date", help="Date for checking the schedule (format: YYYY-MM-DD)")
-    parser.add_argument("--players", action="store_true", help="Include players info (boolean: true|false)")
-    parser.add_argument("--teams", action="store_true", help="Include teams info (boolean: true|false)")
+    # parser.add_argument("--players", action="store_true", help="Include players info (boolean: true|false)")
+    # parser.add_argument("--teams", action="store_true", help="Include teams info (boolean: true|false)")
     # parser.add_argument("--update", action="store_true", help="Include game updates (boolean: true|false)")
 
     return parser.parse_args()
@@ -168,6 +190,7 @@ def main():
     if args.game:
         data['game'] = args.game
         data['update'] = 'true'
+        data['players'] = 'true'
         command = CheckGameEvents(client)
     if args.date:
         data['schedule'] = args.date
