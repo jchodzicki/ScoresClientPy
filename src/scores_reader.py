@@ -235,6 +235,14 @@ class CheckGameEvents(Command):
         self.write_to_file('output/home_name.txt', home_abbr)
         self.write_to_file('output/away_name.txt', away_abbr)
 
+        # Handling team names
+        abbreviations = event_details.get("teams", {})
+        home_abbr = abbreviations.get("home_name", "")
+        away_abbr = abbreviations.get("away_name", "")
+        self.write_to_file('output/home_name_full.txt', home_abbr)
+        self.write_to_file('output/away_name_full.txt', away_abbr)
+
+
         # Handle scoring events
         scoring_events = [event for event in event_details.get('events', []) if event['event_type'] == 'S']
         latest_home_score, latest_away_score = "0", "0"
