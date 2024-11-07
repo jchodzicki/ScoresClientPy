@@ -3,6 +3,11 @@ import time
 import requests
 import os
 import json
+import urllib3
+from urllib3.exceptions import InsecureRequestWarning
+
+# Suppress only the single InsecureRequestWarning from urllib3
+urllib3.disable_warnings(InsecureRequestWarning)
 from abc import ABC, abstractmethod
 
 class APIConfig:
@@ -40,7 +45,7 @@ class APIClient:
         self.base_url = base_url
 
     def post(self, data):
-        response = requests.post(self.base_url, data=data, headers=APIConfig.HEADERS)
+        response = requests.post(self.base_url, data=data, headers=APIConfig.HEADERS, verify=False)
         if response.status_code == 200:
             return response.text
         else:
@@ -342,7 +347,7 @@ def main():
 
     if args.start and args.game:
         print("Game started")
-        countdown(25, "output/clock.txt", command, data)
+        countdown(27, "output/clock.txt", command, data)
         print("Game stopped")
 
     result = command.execute(data)
