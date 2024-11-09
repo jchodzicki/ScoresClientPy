@@ -1,4 +1,5 @@
 import argparse
+import math
 import time
 import requests
 import os
@@ -293,20 +294,42 @@ class CheckGameEvents(Command):
 
 def countdown(minutes, file_path, command, data):
     total_seconds = minutes * 60
-    for remaining_seconds in range(total_seconds, -1, -1):
-        mins, secs = divmod(remaining_seconds, 60)
-        time_str = f"{mins:02}:{secs:02}"
-        print(time_str)
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(time_str)
-            file.flush()
+    game_time = 0
+    game_stopped = True
+    game_stopwatch_timestamp = 0
+    events_request_sent = False
+    last_now = 0
+    while True:
+        now = round(time.time())
+        if last_now != now:
+            last_now = now
+            if game_stopped:
+                remaining_seconds = total_seconds - game_time
+            else:
+                elapsed_time = game_time + now - game_stopwatch_timestamp
+                remaining_seconds = total_seconds - elapsed_time
+            if remaining_seconds < 0:
+                remaining_seconds = 0
+            mins, secs = divmod(remaining_seconds, 60)
+            time_str = f"{mins:02}:{secs:02}"
+            print(time_str)
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.write(time_str)
+                file.flush()
 
-            # Trigger event checking every 30 seconds
-        if remaining_seconds % 30 == 0:
-            result = command.execute(data)
-            print(result)
+            # Trigger event checking every 5 seconds
+            if not events_request_sent and now % 5 == 0:
+                events_request_sent = True
+                result = command.execute(data)
+                print(result)
+                result = json.loads(result)
+                game_time = math.ceil(int(result['game_time']) / 10)
+                game_stopwatch_timestamp = round(int(result['game_stopwatch_timestamp']) / 10)
+                game_stopped = result['game_stopped']
+            elif events_request_sent and now % 5 != 0:
+                events_request_sent = False
 
-        time.sleep(1)
+        time.sleep(0.1)
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
