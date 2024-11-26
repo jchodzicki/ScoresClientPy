@@ -312,7 +312,7 @@ def parse_arguments():
 # Factories for Commands
 class CommandFactory:
     @staticmethod
-    def get_command(client, data, cmd_type):
+    def get_command(client, cmd_type):
         commands = {
             'game_events': CheckGameEvents,
             'game_schedule': CheckGameSchedule
@@ -343,7 +343,7 @@ def setup_game_environment(args):
 def main():
     args = parse_arguments()
     client, data, cmd_type = setup_game_environment(args)
-    command = CommandFactory.get_command(client, data, cmd_type)
+    command = CommandFactory.get_command(client, cmd_type)
 
     if args.start and args.game:
         print("Game started")
