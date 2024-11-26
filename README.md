@@ -217,3 +217,10 @@ Sample Response
 ## Quick Note:
 
 Please remember that different URLs might have different access or further specific parameters for your requests. Always check if you're using the correct endpoint.
+
+## Unit test coverage:
+
+To execute unit tests run the following command in a project directory:
+```shell
+python -m unittest discover tests
+```
