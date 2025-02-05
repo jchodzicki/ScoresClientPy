@@ -15,7 +15,8 @@ class APIConfig:
     # URLs for the different services or environments
     URLs = {
         'test': "https://scores.frisbee.pl/test3/ext/watchlive.php/",
-        'wu': "https://ultiscores.com/winterunleashed/ext/watchlive.php/"
+        'wu': "https://ultiscores.com/winterunleashed/ext/watchlive.php/",
+        'pomeranian': "https://ultiscores.com/pomeranian/ext/watchlive.php/",
     }
 
     # HTTP headers to be used for POST requests
@@ -27,7 +28,7 @@ class APIConfig:
         Returns the base URL corresponding to the given configuration key.
 
         Args:
-        key (str): Configuration key which can be 'test' or 'WU'.
+        key (str): Configuration key which can be 'test', 'WU' or 'pomeranian'.
 
         Returns:
         str: Base URL string.
@@ -333,7 +334,7 @@ def countdown(minutes, file_path, command, data):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
-    parser.add_argument("--url", choices=['test', 'wu'], required=True, help="URL to use (test or wu)")
+    parser.add_argument("--url", choices=['test', 'wu', 'pomeranian'], required=True, help="URL to use (test, wu or pomeranian)")
     parser.add_argument("--game", type=int, help="Game ID to query")
     parser.add_argument("--date", help="Date for checking the schedule (format: YYYY-MM-DD)")
     parser.add_argument("--start", action='store_true', help="Flag to start timer and processing game events")
@@ -375,10 +376,11 @@ def main():
     args = parse_arguments()
     client, data, cmd_type = setup_game_environment(args)
     command = CommandFactory.get_command(client, cmd_type)
+    minutes = 25 if args.url == "pomeranian" else 28
 
     if args.start and args.game:
         print("Game started")
-        countdown(28, "output/clock.txt", command, data)
+        countdown(minutes, "output/clock.txt", command, data)
         print("Game stopped")
 
     result = command.execute(data)
