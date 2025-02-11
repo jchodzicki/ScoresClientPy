@@ -264,7 +264,7 @@ View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux
 What's next:
     View a summary of image vulnerabilities and recommendations → docker scout quickview
 ```
-5. `docker run -it scores /bin/sh` in terminal. Something like this should appear:
+5. `docker run -it -v $(pwd)/forstream:/app/src/output scores /bin/sh` in terminal. Something like this should appear:
 ```
 # 
 ```
@@ -294,3 +294,6 @@ Game Finished: No
 
 # 
 ```
+
+7. A `forstream` folder will be created in the folder where this README.md file is. If we run the command to track the game for example `python scores_reader.py --url test --game 1060 --start` Then files will start appearing as described in this readme, which should be plugged into OBS.
+8. To abort the script use `ctrl+c` in the terminal.
