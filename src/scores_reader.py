@@ -28,7 +28,7 @@ class APIConfig:
         Returns the base URL corresponding to the given configuration key.
 
         Args:
-        key (str): Configuration key which can be 'test', 'WU' or 'pomeranian'.
+        key (str): Configuration key which can be 'test', 'wu' or 'pomeranian'.
 
         Returns:
         str: Base URL string.
