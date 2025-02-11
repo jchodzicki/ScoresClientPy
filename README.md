@@ -30,13 +30,14 @@ For any additional questions or requests, please reach out via email: atarasenko
 ### API documentation
 
 This API provides access to game schedules, current game states, game updates, and game details including player and team information.
-## Base URL for Test
 
-https://scores.frisbee.pl/test3/ext/watchlive.php/
+## Info Table
+| Env name | URL param  | URL to scores                                                     |
+|----------|------------|-------------------------------------------------------------------|
+| test3    | test       | [link](https://scores.frisbee.pl/test3/ext/watchlive.php/)        |
+| winterunleashed       | wu         | [link](https://ultiscores.com/winterunleashed/ext/watchlive.php/) |
+| pomeranian     | pomeranian | [link](https://ultiscores.com/pomeranian/ext/watchlive.php/)      |
 
-## Base URL for Rondo
-
-https://ultiscores.com/rondo/ext/watchlive.php/
 (Note: The slash at the end of each URL is mandatory)
 
 ## Common Header
@@ -224,3 +225,75 @@ To execute unit tests run the following command in a project directory:
 ```shell
 python -m unittest discover tests
 ```
+
+
+## How to run it on Windows or MacOs
+1. Download and install Docker Desktop https://www.docker.com/products/docker-desktop/
+2. Start Docker Desktop and make sure it works (`docker --version` in the terminal). If you want to run the terminal then
+MacOs: Run `Terminal` from Applications 
+Windows: Press `Windows + r`. In the Run box, type `cmd`, then click OK
+3. In the terminal navigate to the folder in which this README.md file is located using the `cd` command in terminal, e.g. `cd ~/ScoresClientPy`
+4. `docker build -t scores .` in terminal. Something like this should appear:
+```
+[+] Building 5.0s (11/11) FINISHED                                                                                                                                                     docker:desktop-linux
+ => [internal] load build definition from Dockerfile                                                                                                                                                   0.0s
+ => => transferring dockerfile: 385B                                                                                                                                                                   0.0s
+ => [internal] load metadata for docker.io/library/python:3.9-slim                                                                                                                                     0.5s
+ => [internal] load .dockerignore                                                                                                                                                                      0.0s
+ => => transferring context: 2B                                                                                                                                                                        0.0s
+ => [1/6] FROM docker.io/library/python:3.9-slim@sha256:f9364cd6e0c146966f8f23fc4fd85d53f2e604bdde74e3c06565194dc4a02f85                                                                               0.0s
+ => => resolve docker.io/library/python:3.9-slim@sha256:f9364cd6e0c146966f8f23fc4fd85d53f2e604bdde74e3c06565194dc4a02f85                                                                               0.0s
+ => [internal] load build context                                                                                                                                                                      0.0s
+ => => transferring context: 7.71kB                                                                                                                                                                    0.0s
+ => CACHED [2/6] WORKDIR /app                                                                                                                                                                          0.0s
+ => [3/6] COPY requirements.txt .                                                                                                                                                                      0.0s
+ => [4/6] RUN pip install --no-cache-dir -r requirements.txt                                                                                                                                           3.5s
+ => [5/6] COPY . .                                                                                                                                                                                     0.0s 
+ => [6/6] WORKDIR /app/src                                                                                                                                                                             0.0s 
+ => exporting to image                                                                                                                                                                                 0.8s 
+ => => exporting layers                                                                                                                                                                                0.5s 
+ => => exporting manifest sha256:49d65889e5ef998d55505e92cd85685b8cef1a936cdf614e0041ac3d7f273589                                                                                                      0.0s 
+ => => exporting config sha256:07386f00a9bc071837f53e1e88d30acb4a24cffd6998fcace97350edd5e1ee96                                                                                                        0.0s 
+ => => exporting attestation manifest sha256:8b035c3343c76f07cc5f6383ebf500bb1c66eb7476aef4ec0f3ad6204a0f35a1                                                                                          0.0s
+ => => exporting manifest list sha256:8f7737d3472fda36222d6fb1f2ed9fb2c02b8bcb4f9d59e9f8921e834f8892d1                                                                                                 0.0s
+ => => naming to docker.io/library/scores:latest                                                                                                                                                       0.0s
+ => => unpacking to docker.io/library/scores:latest                                                                                                                                                    0.2s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/2lwao18ngeh8khlh8meq54ats
+
+What's next:
+    View a summary of image vulnerabilities and recommendations → docker scout quickview
+```
+5. `docker run -it -v $(pwd)/forstream:/app/src/output scores /bin/sh` in terminal. Something like this should appear:
+```
+# 
+```
+6. We can now run a test to see if the script works.
+   Use the command `python scores_reader.py --url test --date 2023-06-23` in terminal.  Something like this should appear:
+```
+Game ID: 1036
+Date: 23.06.2023 Start Time: 16:00
+Home Team: Alpaka (ALP) - None
+Away Team: Edredon (EDR) - None
+Division: mixed
+Game Finished: No
+
+Game ID: 1045
+Date: 23.06.2023 Start Time: 16:00
+Home Team: Cziru (CZR) - 7
+Away Team: Flaming (FLM) - 4
+Division: mixed
+Game Finished: Yes
+
+Game ID: 1050
+Date: 23.06.2023 Start Time: 16:00
+Home Team: Jenot (JNT) - None
+Away Team: Hihara (HHR) - None
+Division: mixed
+Game Finished: No
+
+# 
+```
+
+7. A `forstream` folder will be created in the folder where this README.md file is. If we run the command to track the game for example `python scores_reader.py --url test --game 1060 --start` Then files will start appearing as described in this readme, which should be plugged into OBS.
+8. To abort the script use `ctrl+c` in the terminal.
