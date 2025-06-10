@@ -7,7 +7,15 @@ from scores_reader import APIClient
 @pytest.mark.asyncio
 @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
 async def test_post_success(mock_post):
-    # Setup mock response
+    # Setup mock response:
+    """
+    @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+    This decorator replaces the post method of httpx.AsyncClient with an AsyncMock.
+    This means when APIClient.post calls httpx.AsyncClient.post,
+    it actually calls this mock, letting the test control the response
+    :param mock_post:
+    :return:
+    """
     mock_response = AsyncMock()
     mock_response.status_code = 200
     mock_response.text = "Success"

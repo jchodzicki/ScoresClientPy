@@ -13,7 +13,7 @@ pip install -r requirements.txt
 The CLI is going to have the following interface.
 
 ```shell
-usage:  scores_reader.py [-h] --url {test,rondo} [--game GAME] [--date DATE] [--start]
+usage:  python src/scores_reader.py [-h] --url {test,rondo} [--game GAME] [--date DATE] [--start]
 
 arguments:
 
