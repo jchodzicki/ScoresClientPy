@@ -1,37 +1,38 @@
-import unittest
-from unittest.mock import patch
-from src.scores_reader import APIClient
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from scores_reader import APIClient
 
 
-class TestAPIClient(unittest.TestCase):
-    def setUp(self):
-        self.api_client = APIClient(base_url='https://scores.frisbee.pl/test3/ext/watchlive.php/')
+@pytest.mark.asyncio
+@patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+async def test_post_success(mock_post):
+    # Setup mock response
+    mock_response = AsyncMock()
+    mock_response.status_code = 200
+    mock_response.text = "Success"
+    mock_response.raise_for_status = AsyncMock()
+    mock_post.return_value = mock_response
 
-    @patch('requests.post')
-    def test_post_success(self, mock_post):
-        # Mocking the response of requests.post
-        mock_response = mock_post.return_value
-        mock_response.status_code = 200
-        mock_response.text = 'Success'
+    client = APIClient(base_url="https://example.com/")
+    result = await client.post({"key": "value"})
 
-        # Calling the `post` method of `APIClient`
-        result = self.api_client.post({'key': 'value'})
-        # Assert checks
-        self.assertEqual(result, 'Success')
-
-    @patch('requests.post')
-    def test_post_failure(self, mock_post):
-        # Mocking the response of requests.post to simulate a failure
-        mock_response = mock_post.return_value
-        mock_response.status_code = 404
-        mock_response.reason = 'Not Found'
-
-        # Testing if an exception is raised
-        with self.assertRaises(Exception) as context:
-            self.api_client.post({'key': 'value'})
-
-        self.assertTrue('Failed to fetch data: 404 - Not Found' in str(context.exception))
+    assert result == "Success"
 
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.mark.asyncio
+@patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+async def test_post_failure(mock_post):
+    # Setup mock response
+    mock_response = AsyncMock()
+    mock_response.status_code = 404
+    mock_response.reason_phrase = "Not Found"
+    mock_response.raise_for_status.side_effect = Exception("404 Not Found")
+    mock_post.return_value = mock_response
+
+    client = APIClient(base_url="https://example.com/")
+
+    with pytest.raises(Exception) as exc_info:
+        await client.post({"key": "value"})
+
+    assert "Failed to fetch data" in str(exc_info.value)

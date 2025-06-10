@@ -1,4 +1,8 @@
-requests
+httpx
 argparse
 urllib3
-# unittest
+aiofiles
+asyncio
+pytest
+pytest-asyncio
+aiohttp

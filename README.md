@@ -2,10 +2,10 @@
 
 ### Common Requirements
 
-Ensure you have Python and requests library installed:
+Ensure you have Python and required libraries installed:
 
 ```shell
-pip install requests
+pip install -r requirements.txt
 ```
 
 ### Usage
@@ -223,7 +223,7 @@ Please remember that different URLs might have different access or further speci
 
 To execute unit tests run the following command in a project directory:
 ```shell
-python -m unittest discover tests
+pytest tests
 ```
 
 
@@ -233,7 +233,11 @@ python -m unittest discover tests
 MacOs: Run `Terminal` from Applications 
 Windows: Press `Windows + r`. In the Run box, type `cmd`, then click OK
 3. In the terminal navigate to the folder in which this README.md file is located using the `cd` command in terminal, e.g. `cd ~/ScoresClientPy`
-4. `docker build -t scores .` in terminal. Something like this should appear:
+4. Run the next command to start docker
+```shell
+docker build -t scores .
+```
+Something like this should appear:
 ```
 [+] Building 5.0s (11/11) FINISHED                                                                                                                                                     docker:desktop-linux
  => [internal] load build definition from Dockerfile                                                                                                                                                   0.0s
@@ -264,12 +268,22 @@ View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux
 What's next:
     View a summary of image vulnerabilities and recommendations → docker scout quickview
 ```
-5. `docker run -it -v $(pwd)/forstream:/app/src/output scores /bin/sh` in terminal. Something like this should appear:
+
+
+5. Execute the following command in terminal to enter bash script in docker container.
+```shell
+docker run -it -v $(pwd)/forstream:/app/src/output scores /bin/sh
+```
+Expected result is:
 ```
 # 
 ```
-6. We can now run a test to see if the script works.
-   Use the command `python scores_reader.py --url test --date 2023-06-23` in terminal.  Something like this should appear:
+6. We can now run a test to see if the script works. Use the next command in terminal
+
+```shell
+python scores_reader.py --url test --date 2023-06-23
+```
+Information about the games for specified date should appear. For example:
 ```
 Game ID: 1036
 Date: 23.06.2023 Start Time: 16:00
@@ -295,5 +309,10 @@ Game Finished: No
 # 
 ```
 
-7. A `forstream` folder will be created in the folder where this README.md file is. If we run the command to track the game for example `python scores_reader.py --url test --game 1060 --start` Then files will start appearing as described in this readme, which should be plugged into OBS.
+7. A `forstream` folder will be created in the source directory where this README.md file is. 
+Now we can run the command to track specific game by Id. For example:
+```shell
+python scores_reader.py --url test --game 1060 --start
+```
+Then files will start appearing as described in this README, which should be plugged into OBS.
 8. To abort the script use `ctrl+c` in the terminal.
