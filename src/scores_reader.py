@@ -373,7 +373,7 @@ async def countdown(minutes, file_path, command, data):
             print(time_str)
             async with aiofiles.open(file_path, "w", encoding="utf-8") as file:
                 await file.write(time_str)
-                # file.flush()
+                file.flush()
 
             # Trigger event checking every 5 seconds
             if not events_request_sent and now % 5 == 0:

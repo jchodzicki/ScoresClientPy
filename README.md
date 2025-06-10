@@ -223,7 +223,7 @@ Please remember that different URLs might have different access or further speci
 
 To execute unit tests run the following command in a project directory:
 ```shell
-pytest tests
+pytest
 ```
 
 
