@@ -12,11 +12,23 @@ urllib3.disable_warnings(InsecureRequestWarning)
 from abc import ABC, abstractmethod
 
 class APIConfig:
-    # URLs for the different services or environments
-    URLs = {
-        'test': "https://scores.frisbee.pl/test3/ext/watchlive.php/",
-        'wu': "https://ultiscores.com/winterunleashed/ext/watchlive.php/",
-        'pomeranian': "https://ultiscores.com/pomeranian/ext/watchlive.php/",
+    CONFIG = {
+        'test': {
+            'url': "https://scores.frisbee.pl/test3/ext/watchlive.php/",
+            'minutes': 28
+        },
+        'wu': {
+            'url': "https://ultiscores.com/winterunleashed/ext/watchlive.php/",
+            'minutes': 28
+        },
+        'pomeranian': {
+            'url': "https://ultiscores.com/pomeranian/ext/watchlive.php/",
+            'minutes': 25
+        },
+        'MPOW2025': {
+            'url': "https://scores.frisbee.pl/MPOW2025/ext/watchlive.php/",
+            'minutes': 90
+        }
     }
 
     # HTTP headers to be used for POST requests
@@ -24,22 +36,17 @@ class APIConfig:
 
     @staticmethod
     def get_base_url(key):
-        """
-        Returns the base URL corresponding to the given configuration key.
-
-        Args:
-        key (str): Configuration key which can be 'test', 'wu' or 'pomeranian'.
-
-        Returns:
-        str: Base URL string.
-
-        Raises:
-        ValueError: If the key is not found in the URLs dictionary.
-        """
-        if key in APIConfig.URLs:
-            return APIConfig.URLs[key]
+        if key in APIConfig.CONFIG:
+            return APIConfig.CONFIG[key]['url']
         else:
-            raise ValueError("Invalid URL key provided. Available keys are: {}".format(', '.join(APIConfig.URLs.keys())))
+            raise ValueError(f"Invalid URL key provided. Available keys are: {', '.join(APIConfig.CONFIG.keys())}")
+
+    @staticmethod
+    def get_minutes(key):
+        if key in APIConfig.CONFIG:
+            return APIConfig.CONFIG[key]['minutes']
+        else:
+            raise ValueError(f"Invalid URL key provided. Available keys are: {', '.join(APIConfig.CONFIG.keys())}")
 
 
 class APIClient:
@@ -334,7 +341,7 @@ def countdown(minutes, file_path, command, data):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Ultimate Frisbee Game Information API Client")
-    parser.add_argument("--url", choices=['test', 'wu', 'pomeranian'], required=True, help="URL to use (test, wu or pomeranian)")
+    parser.add_argument("--url", choices=APIConfig.CONFIG.keys(), required=True, help="URL configuration key to use")
     parser.add_argument("--game", type=int, help="Game ID to query")
     parser.add_argument("--date", help="Date for checking the schedule (format: YYYY-MM-DD)")
     parser.add_argument("--start", action='store_true', help="Flag to start timer and processing game events")
@@ -376,7 +383,7 @@ def main():
     args = parse_arguments()
     client, data, cmd_type = setup_game_environment(args)
     command = CommandFactory.get_command(client, cmd_type)
-    minutes = 25 if args.url == "pomeranian" else 28
+    minutes = APIConfig.get_minutes(args.url)
 
     if args.start and args.game:
         print("Game started")
