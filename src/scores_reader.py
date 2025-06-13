@@ -29,7 +29,7 @@ class APIConfig:
             'minutes': 25
         },
         'MPOW2025': {
-            'url': "https://scores.frisbee.pl/MPOW2025/ext/watchlive.php/",
+            'url': "https://scores.frisbee.pl/ext/watchlive.php/",
             'minutes': 90
         }
     }
